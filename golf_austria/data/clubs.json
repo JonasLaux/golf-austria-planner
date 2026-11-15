@@ -1,0 +1,64 @@
+{
+  "description": "Public example clubs in Austria. Coordinates identify club premises for weather, not individual holes. Prices, opening status and booking rules must be checked live.",
+  "timezone": "Europe/Vienna",
+  "clubs": [
+    {
+      "id": "318",
+      "name": "Golfclub Leopoldsdorf",
+      "slug": "golfclub-leopoldsdorf",
+      "address": "Achauerstraße 6, 2333 Leopoldsdorf, Austria",
+      "url": "https://www.golf.at/golfclubs/golfclub-leopoldsdorf/318",
+      "booking_url": "https://www.golf.at/golfclubs/golfclub-leopoldsdorf/318/startzeiten",
+      "official_booking_url": "https://www.golf.at/mygolf/login?wantedurl=/mygolf/tee-online/verfuegbare-startzeiten/golfclub-leopoldsdorf/318",
+      "website": "https://www.gcleopoldsdorf.at/",
+      "calendar_issuer_id": "5d43e55ed1684750513f057f",
+      "calendar_course_names": [
+        "GC Leopoldsdorf"
+      ],
+      "course_holes": 9,
+      "latitude": 48.1030537,
+      "longitude": 16.3987534,
+      "coordinate_description": "Club location returned by the Google Maps embed linked from the club's official contact page; matched by name and Achauerstraße 6 address.",
+      "coordinate_sources": [
+        "https://www.gcleopoldsdorf.at/kontakt/",
+        "https://maps.google.com/maps?q=Golfclub%20Leopoldsdorf&t=m&z=12&output=embed&iwloc=near"
+      ],
+      "booking_notes": "The official club Startzeiten link uses Golf Austria. Its homepage directs players without an Austrian home club to Nexxchange; that alternate route has not been authenticated or tested.",
+      "condition_source": "https://www.gcleopoldsdorf.at/",
+      "price_source": "https://www.gcleopoldsdorf.at/preise/",
+      "sources": [
+        "https://www.golf.at/suche/golfclubsuche?Clubname=Leopoldsdorf&lstSites=0&a=dosearch",
+        "https://www.gcleopoldsdorf.at/",
+        "https://www.gcleopoldsdorf.at/club/"
+      ],
+      "metadata_checked_on": "2026-11-15"
+    },
+    {
+      "id": "902",
+      "name": "C&C Golfclub am Wienerberg",
+      "slug": "c-c-golfclub-am-wienerberg",
+      "address": "Gutheil-Schoder-Gasse 7, 1100 Wien, Austria",
+      "url": "https://www.golf.at/golfclubs/c-c-golfclub-am-wienerberg/902",
+      "booking_url": "https://www.golf.at/golfclubs/c-c-golfclub-am-wienerberg/902/startzeiten",
+      "official_booking_url": "https://www.golf.at/",
+      "website": "https://www.cityandcountry.at/wienerberg",
+      "course_holes": 9,
+      "latitude": 48.1634821,
+      "longitude": 16.3388385,
+      "coordinate_description": "Business/clubhouse coordinates published as businessLocationCoordinates in the official C&C website HTML.",
+      "coordinate_sources": [
+        "https://www.cityandcountry.at/golf",
+        "https://www.cityandcountry.at/kontakt"
+      ],
+      "booking_notes": "The official golf STARTZEIT RESERVIEREN link points to golf.at. The site's Nexxchange /search/other link is labelled RACKET-RESERVIERUNGEN and must not be treated as a golf booking route.",
+      "condition_source": "https://www.cityandcountry.at/golf",
+      "price_source": "https://www.cityandcountry.at/wienerberg",
+      "sources": [
+        "https://www.golf.at/suche/golfclubsuche?Clubname=Wienerberg&lstSites=0&a=dosearch",
+        "https://www.cityandcountry.at/golf",
+        "https://www.cityandcountry.at/wienerberg"
+      ],
+      "metadata_checked_on": "2026-11-15"
+    }
+  ]
+}

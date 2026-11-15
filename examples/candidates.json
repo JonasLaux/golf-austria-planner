@@ -1,0 +1,32 @@
+[
+  {
+    "id": "synthetic-morning",
+    "synthetic": true,
+    "club": "Example Vienna-area club (synthetic)",
+    "course": "Illustrative 18-hole course",
+    "start": "2026-11-16T09:30:00+01:00",
+    "holes": 18,
+    "duration_minutes": 270,
+    "available_players": 2,
+    "price_eur": 55,
+    "latitude": 48.2,
+    "longitude": 16.37,
+    "source_url": "https://example.invalid/tee-times",
+    "verified_at": "2026-11-15T22:00:00+00:00"
+  },
+  {
+    "id": "synthetic-afternoon",
+    "synthetic": true,
+    "club": "Example Vienna-area club (synthetic)",
+    "course": "Illustrative 9-hole course",
+    "start": "2026-11-16T14:30:00+01:00",
+    "holes": 9,
+    "duration_minutes": 135,
+    "available_players": 1,
+    "price_eur": null,
+    "latitude": 48.2,
+    "longitude": 16.37,
+    "source_url": "https://example.invalid/tee-times",
+    "verified_at": "2026-11-15T22:00:00+00:00"
+  }
+]

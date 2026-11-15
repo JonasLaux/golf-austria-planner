@@ -1,0 +1,1 @@
+"""Local golf planning tools."""

@@ -1,0 +1,11 @@
+include README.md AGENTS.md LICENSE SECURITY.md pyproject.toml
+include golf_austria/data/clubs.json
+include scripts/check_public_tree.py
+recursive-include golf_austria *.py
+recursive-include tests test_*.py
+prune .private
+prune .venv
+prune reports
+prune build
+prune dist
+global-exclude __pycache__ *.py[cod] *.log *.sqlite* *.db
