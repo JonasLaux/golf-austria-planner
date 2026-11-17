@@ -1,19 +1,24 @@
 # Working on Golf Austria Planner
 
-This is an unofficial Python CLI that reads tee-time calendars and ranks rounds
-using hourly weather. Keep it useful from a terminal and composable through JSON.
+This is an unofficial Python CLI that exposes observed Golf Austria pages as
+anonymous JSON for agents. Direct calendar reads need no server or browser;
+authenticated browser access and weather ranking remain optional. Keep the golf
+interface thin: agents apply each user's time, occupancy, and buffer preferences.
 There is no Hermes dependency and no automatic reservation submission.
 
 ## Layout
 
 - `golf_austria/browser.py`: dedicated Chromium profile, authentication and private cookies.
 - `golf_austria/portal.py`: authenticated navigation, club/date verification and browser handoff.
-- `golf_austria/calendar.py`: pure HTML parsing into anonymous tee-time candidates.
+- `golf_austria/direct.py`: mapped public calendar GETs; no browser, private state, or redirects.
+- `golf_austria/calendar.py`: pure HTML parsing into anonymous slots and free-seat candidates.
 - `golf_austria/weather.py`: forecast retrieval, time windows and deterministic ranking.
 - `golf_austria/clubs.py`: public club directory search.
 - `golf_austria/cli.py`: command orchestration, JSON output and exit codes.
 - `golf_austria/data/clubs.json`: public example club metadata, with sources.
 - `tests/`: synthetic data and mocked services; no account or live-network dependency.
+- `skills/golf-austria/SKILL.md`: agent instructions for the thin golf CLI.
+- `docs/golf-austria-endpoints.md`: observed requests, verified coverage and integration limits.
 
 ## Development
 
@@ -60,6 +65,7 @@ standard library. The only runtime dependency is Playwright.
 ## Behavior to preserve
 
 - Login and booking handoff use a dedicated profile, never the everyday browser.
+- Direct reads do not use private state and require verified issuer/course mappings.
 - Availability lookup is read-only. Some checkout URLs initialize an order
   basket through GET: do not visit them during scraping, prefetching, tests,
   link validation, or documentation generation.
@@ -77,9 +83,9 @@ standard library. The only runtime dependency is Playwright.
 - Course notices are advisories unless they establish a closure. A closed
   driving range does not mean the course is closed; a frost rule does not prove
   frost is present.
-- `eligible` describes recommendation suitability. `bookable` stays false while
-  automatic checkout is unimplemented. Never report a reservation as confirmed
-  without evidence from the provider.
+- `eligible` describes recommendation suitability. Ranked results keep `bookable`
+  false; raw tee-time results have no such field. Never report a reservation as
+  confirmed without evidence from the provider.
 
 ## Documentation and changes
 

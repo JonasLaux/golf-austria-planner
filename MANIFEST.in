@@ -1,6 +1,8 @@
 include README.md AGENTS.md LICENSE SECURITY.md pyproject.toml
 include golf_austria/data/clubs.json
 include scripts/check_public_tree.py
+include docs/golf-austria-endpoints.md
+include skills/golf-austria/SKILL.md
 recursive-include golf_austria *.py
 recursive-include tests test_*.py
 prune .private

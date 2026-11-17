@@ -149,14 +149,16 @@ def parse_calendar(
     verified_at: str | None = None,
     duration_minutes: int | None = None,
 ) -> dict:
-    """Return dated candidates, product metadata and course notices.
+    """Return dated candidates, anonymous tee-sheet slots and course notices.
 
     ``club`` supplies id/name/latitude/longitude and optional timezone. Round
     duration is a planning assumption, not supplied by the booking provider:
     by default 120 minutes for 9 holes or 270 for 18, with an explicit override
     allowed. Product length comes from the actual offered facet's 9/18-hole
     label. Unknown price is None. Current listed prices are per player and may
-    still change at checkout. No successful booking is implied by this result.
+    still change at checkout. ``slots`` retains every observed tee-time row,
+    including fully booked rows, with anonymous occupancy counts. No successful
+    booking is implied by this result.
     """
     target = date.fromisoformat(requested_date)
     if duration_minutes is not None and (
@@ -177,6 +179,7 @@ def parse_calendar(
         "source_url": source,
         "verified_at": checked_at,
         "candidates": [],
+        "slots": [],
         "notices": [],
     }
     if "Userdaten nicht vorhanden" in text or any(
@@ -274,6 +277,7 @@ def parse_calendar(
                 raise CalendarParseError("The displayed course does not match the configured club.")
 
     candidates = []
+    slots = []
     tz = ZoneInfo(club.get("timezone", "Europe/Vienna"))
     for row in rows:
         time_nodes = [node for node in row.walk() if node.has("teetime-time")]
@@ -291,38 +295,73 @@ def parse_calendar(
             tzinfo=tz,
         )
         grouped = {}
-        for node in row.walk():
-            if node.tag != "a" or not (node.has("player-box") and node.has("none")):
+        booked_players = 0
+        unknown_players = 0
+        player_cells = [node for node in row.walk() if node.has("player-box")]
+        for node in player_cells:
+            is_booked = node.has("booked")
+            is_free = node.has("none")
+            if is_booked:
+                if is_free or node.has("disabled") or node.attrs.get("aria-disabled") == "true":
+                    unknown_players += 1
+                else:
+                    booked_players += 1
                 continue
-            if node.has("disabled") or node.attrs.get("aria-disabled") == "true":
-                continue
-            parts = urlsplit(node.attrs.get("href") or "")
-            if parts.netloc and parts.netloc not in {"teetimes.golf.at", "www.nexxchange.com"}:
-                raise CalendarParseError("A tee-time booking link points to an unexpected host.")
-            if parts.path not in {
-                "/mp1/checkout/book",
-                "/widgets-web/booking/submitSelectProductForm",
-            }:
-                raise CalendarParseError("A free player slot uses an unrecognized booking action.")
-            query = parse_qs(parts.query)
-            tee_id, facet_id, issuer_id = (
-                _one(query, key) for key in ("teeTimeId", "facetId", "issuerId")
-            )
             if (
-                not tee_id
-                or not facet_id
-                or not issuer_id
-                or not re.fullmatch(r"-?\d+", tee_id)
-                or not facet_id.isdigit()
-                or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", issuer_id)
+                is_free
+                and node.tag == "a"
+                and not node.has("disabled")
+                and node.attrs.get("aria-disabled") != "true"
             ):
-                raise CalendarParseError(
-                    "A booking link lacks its expected public slot identifiers."
+                parts = urlsplit(node.attrs.get("href") or "")
+                if parts.netloc and parts.netloc not in {
+                    "teetimes.golf.at",
+                    "www.nexxchange.com",
+                }:
+                    raise CalendarParseError(
+                        "A tee-time booking link points to an unexpected host."
+                    )
+                if parts.path not in {
+                    "/mp1/checkout/book",
+                    "/widgets-web/booking/submitSelectProductForm",
+                }:
+                    raise CalendarParseError(
+                        "A free player slot uses an unrecognized booking action."
+                    )
+                query = parse_qs(parts.query)
+                tee_id, facet_id, issuer_id = (
+                    _one(query, key) for key in ("teeTimeId", "facetId", "issuerId")
                 )
-            key = (tee_id, facet_id, issuer_id)
-            grouped.setdefault(key, []).append(node)
+                if (
+                    not tee_id
+                    or not facet_id
+                    or not issuer_id
+                    or not re.fullmatch(r"-?\d+", tee_id)
+                    or not facet_id.isdigit()
+                    or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", issuer_id)
+                ):
+                    raise CalendarParseError(
+                        "A booking link lacks its expected public slot identifiers."
+                    )
+                key = (tee_id, facet_id, issuer_id)
+                grouped.setdefault(key, []).append(node)
+                continue
+            unknown_players += 1
         if row.has("fullybooked") and grouped:
             raise CalendarParseError("A row contradicts its fully-booked status.")
+        slots.append(
+            {
+                "start": start.isoformat(),
+                "available_players": (
+                    sum(len(seats) for seats in grouped.values()) if len(grouped) <= 1 else None
+                ),
+                "booked_players": booked_players,
+                "unknown_players": unknown_players,
+                "occupancy_known": (
+                    bool(player_cells) and unknown_players == 0 and len(grouped) <= 1
+                ),
+            }
+        )
         for (tee_id, facet_id, issuer_id), seats in grouped.items():
             if len(seats) > 4:
                 raise CalendarParseError(
@@ -378,5 +417,6 @@ def parse_calendar(
         "products": list(products.values()),
         "notices": notices,
         "calendar_slots_seen": len(rows),
+        "slots": slots,
         "candidates": candidates,
     }

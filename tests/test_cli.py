@@ -3,7 +3,7 @@
 import io
 import json
 import unittest
-from contextlib import ExitStack, redirect_stdout
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from unittest.mock import patch
 
 from playwright.sync_api import Error as PlaywrightError
@@ -116,6 +116,75 @@ class RecommendationCliTests(unittest.TestCase):
                 self.assertEqual(lookup.call_args.kwargs["duration_minutes"], expected)
                 self.assertEqual(result["assumptions"]["duration_minutes"], expected)
                 self.assertEqual(result["candidates"][0]["duration_minutes"], expected)
+
+
+class DirectCliTests(unittest.TestCase):
+    def test_direct_mode_dispatches_without_browser_or_state(self):
+        args = cli.parser().parse_args(
+            [
+                "--state-dir",
+                "/unused-private-state",
+                "times",
+                "--direct",
+                "--club",
+                "123",
+                "--date",
+                "2026-11-16",
+                "--hour",
+                "10",
+                "--minute",
+                "20",
+            ]
+        )
+        with patch.object(cli, "direct_availability", return_value={"status": "ok"}) as direct:
+            with patch.object(cli, "availability") as browser:
+                self.assertEqual(cli.run(args), {"status": "ok"})
+        browser.assert_not_called()
+        direct.assert_called_once_with(
+            "123",
+            "2026-11-16",
+            hour=10,
+            minute=20,
+            duration_minutes=None,
+            clubs_file=cli.DEFAULT_CLUBS,
+        )
+
+    def test_browser_default_still_works_and_rejects_custom_direct_parameters(self):
+        with patch.object(cli, "availability", return_value={"status": "ok"}) as browser:
+            args = cli.parser().parse_args(["times", "--club", "123", "--date", "2026-11-16"])
+            self.assertEqual(cli.run(args), {"status": "ok"})
+            browser.assert_called_once()
+            args.hour = 10
+            with self.assertRaisesRegex(ValueError, "require --direct"):
+                cli.run(args)
+            browser.assert_called_once()
+
+    def test_direct_partial_outcomes_are_json_and_exit_two(self):
+        for status in ("calendar_requires_mapping", "authentication_required", "access_denied"):
+            result = {"status": status, "candidates": None, "slots": None}
+            with (
+                self.subTest(status=status),
+                patch.object(cli, "direct_availability", return_value=result),
+            ):
+                with patch(
+                    "sys.argv",
+                    ["golf", "times", "--direct", "--club", "123", "--date", "2026-11-16"],
+                ):
+                    output = io.StringIO()
+                    with redirect_stdout(output):
+                        self.assertEqual(cli.main(), 2)
+                    self.assertEqual(json.loads(output.getvalue()), result)
+
+    def test_direct_runtime_error_is_json_on_stderr_and_exit_one(self):
+        with patch.object(cli, "direct_availability", side_effect=GolfError("Calendar redirected")):
+            with patch(
+                "sys.argv", ["golf", "times", "--direct", "--club", "123", "--date", "2026-11-16"]
+            ):
+                output, errors = io.StringIO(), io.StringIO()
+                with redirect_stdout(output), redirect_stderr(errors):
+                    self.assertEqual(cli.main(), 1)
+                self.assertEqual(output.getvalue(), "")
+                self.assertEqual(json.loads(errors.getvalue()), {"error": "Calendar redirected"})
 
 
 if __name__ == "__main__":

@@ -28,6 +28,11 @@ def git(repo, *arguments):
 
 
 class PublicTreeTests(unittest.TestCase):
+    def test_only_the_named_skill_document_is_allowed(self):
+        self.assertTrue(checker.allowed_path("skills/golf-austria/SKILL.md"))
+        self.assertFalse(checker.allowed_path("skills/golf-austria/cookies.json"))
+        self.assertFalse(checker.allowed_path("skills/other/SKILL.md"))
+
     def test_private_and_unknown_paths_are_rejected_without_reading_their_blobs(self):
         entries = [
             checker.Entry(".private/cookies.json", "100644", "private-oid"),

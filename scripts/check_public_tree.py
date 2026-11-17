@@ -36,6 +36,7 @@ FIXED_PATHS = {
     "golf_austria/data/clubs.json",
     "examples/candidates.json",
     "scripts/check_public_tree.py",
+    "skills/golf-austria/SKILL.md",
 }
 MAX_BLOB_BYTES = 1_000_000
 PLACEHOLDERS = {

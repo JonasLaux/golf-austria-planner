@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .browser import DEFAULT_STATE, GolfError, login, session_status
 from .clubs import search_clubs
+from .direct import availability as direct_availability
 from .portal import (
     DEFAULT_CLUBS,
     availability,
@@ -43,6 +44,15 @@ def parser():
     times = commands.add_parser("times", help="Read live tee times without touching checkout")
     times.add_argument("--club", required=True)
     times.add_argument("--date", required=True, help="YYYY-MM-DD, Europe/Vienna")
+    times.add_argument(
+        "--direct",
+        action="store_true",
+        help="Use the mapped public HTTP endpoint without a browser",
+    )
+    times.add_argument("--hour", type=int, default=6, help="Upstream search hour, 0–23 (--direct)")
+    times.add_argument(
+        "--minute", type=int, default=0, help="Upstream search minute, 0–59 (--direct)"
+    )
     times.add_argument(
         "--duration",
         type=int,
@@ -116,6 +126,17 @@ def run(args):
     if args.command == "times":
         if args.duration is not None and not 1 <= args.duration <= 720:
             raise ValueError("Round duration must be between 1 and 720 minutes.")
+        if args.direct:
+            return direct_availability(
+                args.club,
+                args.date,
+                hour=args.hour,
+                minute=args.minute,
+                duration_minutes=args.duration,
+                clubs_file=args.clubs_file,
+            )
+        if args.hour != 6 or args.minute != 0:
+            raise ValueError("Custom hour/minute parameters require --direct.")
         return availability(
             args.club,
             args.date,
